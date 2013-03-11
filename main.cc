@@ -19,6 +19,7 @@
 
 
 #include "ubrowse.h"
+#include "autoscroller.h"
 #include <QApplication>
 
 
@@ -32,6 +33,16 @@ main (int argc, char **argv)
     application.setOrganizationDomain("org");
 
     uBrowse browser;
+    AutoScroller scroller(browser.webView());
+    scroller.setInterval(50);
+    scroller.setDelta(5);
+
+    QObject::connect(browser.webView(),
+                     SIGNAL(loadFinished(bool)),
+                     &scroller,
+                     SLOT(setEnabled(bool)),
+                     Qt::UniqueConnection);
+
     browser.show();
     browser.load(QUrl::fromUserInput((argc > 1) ? argv[1] : "http://www.igalia.com"));
 

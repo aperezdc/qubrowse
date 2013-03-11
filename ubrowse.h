@@ -30,7 +30,7 @@ class uBrowse : public QMainWindow
 
         void _updateWindowTitle();
 
-    private Q_SLOTS:
+    private slots:
         void _loadStartedEvent();
         void _loadFinishedEvent(bool);
         void _titleChangedEvent(const QString&);
@@ -39,8 +39,9 @@ class uBrowse : public QMainWindow
 
     public:
         uBrowse();
+        QWebView *webView() { return &_webview; }
 
-    public Q_SLOTS:
+    public slots:
         void load(const QUrl&);
 };
 
