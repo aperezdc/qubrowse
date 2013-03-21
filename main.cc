@@ -20,32 +20,51 @@
 
 #include "ubrowse.h"
 #include "autoscroller.h"
+#include "gcpuprofiler.h"
 #include <QApplication>
+#include <QDebug>
 
 
 int
 main (int argc, char **argv)
 {
-    QApplication application(argc, argv);
-    application.setApplicationName("qubrowse");
-    application.setApplicationVersion(VERSION);
-    application.setOrganizationName("igalia");
-    application.setOrganizationDomain("org");
+    QApplication *application = new QApplication(argc, argv);
+    qDebug("QApplication created");
 
-    uBrowse browser;
-    AutoScroller scroller(browser.webView());
-    scroller.setInterval(50);
-    scroller.setDelta(5);
+    application->setApplicationName("qubrowse");
+    application->setApplicationVersion(VERSION);
+    application->setOrganizationName("igalia");
+    application->setOrganizationDomain("org");
+    qDebug("QApplication configured");
 
-    QObject::connect(browser.webView(),
-                     SIGNAL(loadFinished(bool)),
-                     &scroller,
-                     SLOT(setEnabled(bool)),
-                     Qt::UniqueConnection);
+    GCpuProfiler profile("qubrowse.prof");
+    qDebug("GCpuProfiler created");
 
-    browser.show();
-    browser.load(QUrl::fromUserInput((argc > 1) ? argv[1] : "http://www.igalia.com"));
+    uBrowse *browser = new uBrowse();
+    qDebug("uBrowse created");
 
-    return application.exec();
+    profile.connect(browser->webView(),
+                    SIGNAL(loadFinished(bool)),
+                    SLOT(start()),
+                    Qt::UniqueConnection);
+
+    AutoScroller *scroller = new AutoScroller(browser->webView());
+    scroller->setInterval(50);
+    scroller->setDelta(5);
+    scroller->connect(browser->webView(),
+                      SIGNAL(loadFinished(bool)),
+                      SLOT(setEnabled(bool)),
+                      Qt::UniqueConnection);
+    qDebug("Scroller created");
+
+    browser->show();
+    qDebug("uBrowse shown");
+    browser->load(QUrl::fromUserInput((argc > 1) ? argv[1] : "http://www.igalia.com"));
+
+    qDebug("Entering event loop");
+    int result = application->exec();
+
+    profile.flush();
+    return result;
 }
 
