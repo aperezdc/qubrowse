@@ -27,16 +27,21 @@ AutoScroller::AutoScroller(QWebView *webView, QObject *parent):
 
 void AutoScroller::setEnabled(bool enabled)
 {
-    if (enabled)
+    if (enabled) {
         _timer.start();
-    else
+        qDebug("Autoscroll started");
+    }
+    else {
         _timer.stop();
+        qDebug("Autoscroll stopped");
+    }
 }
 
 
 void AutoScroller::reverseDirection()
 {
     _delta = (- _delta);
+    qDebug("Autoscroll direction reversed");
 }
 
 

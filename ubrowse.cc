@@ -8,6 +8,7 @@
 #include "ubrowse.h"
 #include <QToolBar>
 #include <QStatusBar>
+#include <QDebug>
 
 
 static const struct {
@@ -113,6 +114,7 @@ uBrowse::_loadFinishedEvent(bool)
 {
     statusBar()->setVisible(false);
     _updateWindowTitle();
+    qDebug("Loading finished");
 }
 
 
