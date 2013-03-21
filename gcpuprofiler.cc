@@ -7,6 +7,7 @@
 
 #include "gcpuprofiler.h"
 #include <QApplication>
+#include <QTimer>
 #include <QDebug>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -18,8 +19,9 @@ static const char* ProfilerFlushFunc_Name   = "ProfilerFlush";
 static const char* ProfilerEnabledFunc_Name = "ProfilingIsEnabledForAllThreads";
 
 
-GCpuProfiler::GCpuProfiler(const char *filename, QObject* parent):
+GCpuProfiler::GCpuProfiler(const char *filename, ulong timeout, QObject* parent):
     QObject(parent),
+    _timeout(timeout),
     _filename(::strdup(filename)),
     _profilerStart(0),
     _profilerStop(0),
@@ -42,7 +44,9 @@ void GCpuProfiler::start()
     if (initProfiler() && !isEnabled()) {
         Q_ASSERT(_profilerStart);
         int result = (*_profilerStart)(_filename);
-        qDebug("Profiling started, code: %#x", result);
+        if (_timeout)
+            QTimer::singleShot(_timeout, this, SLOT(_onTimeout()));
+        qDebug("Profiling started, code: %#x, timeout: %lu", result, _timeout);
     }
 }
 
@@ -112,4 +116,11 @@ bool GCpuProfiler::initProfiler()
     initDone = true;
     enabled = true;
     return true;
+}
+
+
+void GCpuProfiler::_onTimeout()
+{
+    stop();
+    emit timeout();
 }

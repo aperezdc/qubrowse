@@ -16,7 +16,7 @@ class GCpuProfiler : public QObject
     Q_OBJECT
 
 public:
-    GCpuProfiler(const char *filename, QObject* parent = 0);
+    GCpuProfiler(const char *filename, ulong timeout = 0, QObject* parent = 0);
     virtual ~GCpuProfiler();
 
     bool isEnabled();
@@ -26,12 +26,16 @@ public slots:
     void stop();
     void flush();
 
+signals:
+    void timeout();
+
 private:
     typedef int  (*ProfilerStartFunc)  (const char*);
     typedef void (*ProfilerStopFunc)   ();
     typedef void (*ProfilerFlushFunc)  ();
     typedef int  (*ProfilerEnabledFunc)();
 
+    ulong               _timeout;
     const char         *_filename;
     ProfilerStartFunc   _profilerStart;
     ProfilerStopFunc    _profilerStop;
@@ -39,6 +43,9 @@ private:
     ProfilerEnabledFunc _profilerEnabled;
 
     bool initProfiler();
+
+private slots:
+    void _onTimeout();
 };
 
 #endif /* !__gcpuprofiler_h__ */
