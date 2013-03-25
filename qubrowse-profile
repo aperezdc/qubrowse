@@ -1,0 +1,12 @@
+#! /bin/bash
+#
+# ubp
+# Copyright (C) 2013 Adrian Perez <aperez@igalia.com>
+#
+# Distributed under terms of the MIT license.
+#
+
+dir=$(dirname "$0")
+export LD_PRELOAD=/usr/lib/libprofiler.so
+exec "$dir/qubrowse" "$@"
+

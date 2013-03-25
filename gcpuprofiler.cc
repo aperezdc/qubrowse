@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QDebug>
 #include <unistd.h>
+#include <stdlib.h>
 #include <dlfcn.h>
 
 

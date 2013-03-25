@@ -37,41 +37,42 @@ main (int argc, char **argv)
     application.setOrganizationDomain("org");
     qDebug("QApplication configured");
 
-    GCpuProfiler profile("qubrowse.prof", 30 * 1000);
-    qDebug("GCpuProfiler created");
-
-    uBrowse *browser = new uBrowse();
+    uBrowse browser;
     qDebug("uBrowse created");
 
-    // Start the profiler (if libprofile.so has been LD_PRELOADed) once the
-    // web page has completed loading, to avoid sampling the network code.
-    profile.connect(browser->webView(),
-                    SIGNAL(loadFinished(bool)),
-                    SLOT(start()),
-                    Qt::UniqueConnection);
+    if (argc > 2) {
+        unsigned long timeout = (argc > 3) ? strtoul(argv[3], NULL, 0) : 30;
+        GCpuProfiler *profile = new GCpuProfiler(argv[2], timeout * 1000, &application);
+        qDebug("Profiling to '%s' for %lus", argv[2], timeout);
 
-    // Exit the application when the profiler has gathered data
-    application.connect(&profile,
-                        SIGNAL(timeout()),
-                        SLOT(quit()),
-                        Qt::UniqueConnection);
+        // Start the profiler (if libprofile.so has been LD_PRELOADed) once the
+        // web page has completed loading, to avoid sampling the network code.
+        profile->connect(browser.webView(),
+                         SIGNAL(loadFinished(bool)),
+                         SLOT(start()),
+                         Qt::UniqueConnection);
 
-    AutoScroller scroller(browser->webView());
-    scroller.setInterval(50);
-    scroller.setDelta(5);
-    scroller.connect(browser->webView(),
-                     SIGNAL(loadFinished(bool)),
-                     SLOT(setEnabled(bool)),
-                     Qt::UniqueConnection);
+        // Exit the application when the profiler has gathered data
+        application.connect(profile,
+                            SIGNAL(timeout()),
+                            SLOT(quit()),
+                            Qt::UniqueConnection);
 
-    browser->show();
+        AutoScroller *scroller = new AutoScroller(browser.webView(), &application);
+        scroller->setInterval(50);
+        scroller->setDelta(5);
+        scroller->connect(browser.webView(),
+                          SIGNAL(loadFinished(bool)),
+                          SLOT(setEnabled(bool)),
+                          Qt::UniqueConnection);
+    }
+
     qDebug("uBrowse shown");
-    browser->load(QUrl::fromUserInput((argc > 1) ? argv[1] : "http://www.igalia.com"));
+    browser.load(QUrl::fromUserInput((argc > 1) ? argv[1] : "http://www.igalia.com"));
+    browser.showMaximized();
 
     qDebug("Entering event loop");
-    int result = application.exec();
 
-    profile.flush();
-    return result;
+    return application.exec();
 }
 
